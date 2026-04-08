@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard HADAPI - Navbar Top</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <link rel="icon" type="image/png" href="hdp.png">
+    <style>
+        body { margin:0; font-family:'Segoe UI', Arial; background:#f0f2f5; min-height: 100vh; }
+        
+      #kartuTemplate {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    opacity: 1; /* LANGSUNG 1 */
+    z-index: 9999;
+}
+        /* Navbar Top Style */
+        .navbar {
+            background: #2c3e50;
+            color: white;
+            padding: 0 20px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .nav-brand { font-size: 1.2rem; font-weight: bold; color: #ecf0f1; text-decoration: none; }
+        
+        .nav-links { display: flex; gap: 10px; align-items: center; }
+
+        .nav-item-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .nav-item-btn:hover, .nav-item-btn.active { background: #c0392b; }
+
+        /* Dropdown Wilayah */
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: white;
+            min-width: 200px;
+            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            z-index: 1;
+        }
+        .dropdown-content button {
+            color: #2c3e50;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            width: 100%;
+            text-align: left;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .dropdown-content button:hover { background-color: #f1f1f1; color: #c0392b; }
+        .dropdown:hover .dropdown-content { display: block; }
+
+        /* Main Content */
+        .content { padding: 30px; box-sizing: border-box; max-width: 1400px; margin: 0 auto; }
+        
+        .section-title { margin-bottom: 20px; color: #2c3e50; font-weight: 600; border-left: 5px solid #c0392b; padding-left: 15px; }
+        
+        /* Dashboard Cards */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); cursor: pointer; transition: 0.3s; border-bottom: 4px solid #ddd; }
+        .stat-card:hover { transform: translateY(-5px); border-bottom: 4px solid #c0392b; }
+        .stat-card h3 { margin: 0; font-size: 0.75rem; color: #7f8c8d; text-transform: uppercase; }
+        .stat-card p { margin: 8px 0 0; font-size: 1.5rem; font-weight: bold; color: #2c3e50; }
+
+        /* Tabel Design */
+        .table-outer { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; padding: 1px; }
+        .table-container { overflow-x: auto; width: 100%; }
+        
+        table { width: 100%; border-collapse: collapse; min-width: 2500px; }
+        
+        th { background: #f8f9fa; padding: 15px 10px; text-align: left; font-size: 0.75rem; color: #7f8c8d; text-transform: uppercase; border-bottom: 2px solid #eee; white-space: nowrap; }
+        td { padding: 12px 10px; border-bottom: 1px solid #f1f1f1; font-size: 0.85rem; white-space: nowrap; color: #34495e; }
+        
+        .sticky-col { position: sticky; left: 0; background: white; z-index: 5; border-right: 2px solid #eee !important; }
+        th.sticky-col { background: #f8f9fa; z-index: 6; }
+        
+        .badge-wilayah { background: #ebf5ff; color: #007bff; padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 0.7rem; }
+        .btn-delete { color: #e74c3c; border: none; background: none; cursor: pointer; font-size: 1.1rem; transition: 0.2s; }
+        .btn-delete:hover { transform: scale(1.2); }
+
+        @media (max-width: 768px) {
+            .navbar { height: auto; padding: 15px; flex-direction: column; gap: 10px; }
+            .nav-links { flex-wrap: wrap; justify-content: center; }
+        }
+
+        .nav-item-btn.active {
+    background: #c0392b !important;
+    color: white !important;
+    border-color: #c0392b !important;
+}
+    </style>
+</head>
+<body>
+ <div id="kartuTemplate" style="
+width:600px;
+height:300px;
+padding:20px;
+background: linear-gradient(135deg, #2c3e50, #c0392b);
+color:white;
+border-radius:15px;
+font-family:Segoe UI;
+position:fixed;
+top:0;
+left:0;
+z-index:9999;
+overflow:hidden;
+display:none;
+">
+
+<!-- WATERMARK -->
+<div style="
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+width:260px;
+height:260px;
+background-image:url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...ISI_FULL_BASE64_DISINI');
+background-size:contain;
+background-repeat:no-repeat;
+background-position:center;
+opacity:0.1;
+z-index:0;
+"></div>
+
+<!-- HEADER -->
+<div style="display:flex; align-items:center; gap:15px; position:relative; z-index:2;">
+    
+    <!-- LOGO -->
+    <div style="
+    width:60px;
+    height:60px;
+    background-size:contain;
+    background-repeat:no-repeat;
+    background-position:center;
+    "></div>
+
+    <div>
+        <h3 style="margin:0;">KARTU TANDA ANGGOTA</h3>
+        <p style="margin:0; font-size:0.75rem;">
+            Himpunan Pemuda Digipreneur Indonesia
+        </p>
+    </div>
+</div>
+
+<hr style="border:1px solid rgba(255,255,255,0.3); position:relative; z-index:2;">
+
+<!-- DATA -->
+<div style="display:grid; grid-template-columns:180px 1fr; gap:6px; position:relative; z-index:2;">
+    <div>Nama</div><div>: <b id="k_nama"></b></div>
+    <div>ID</div><div>: <b id="k_id"></b></div>
+    <div>Wilayah</div><div>: <b id="k_wilayah"></b></div>
+    <div>LDK</div><div>: <b id="k_ldk"></b></div>
+    <div>Status</div><div>: <b id="k_status"></b></div>
+</div>
+
+<!-- FOOTER -->
+<div style="
+position:absolute;
+bottom:10px;
+right:15px;
+font-size:0.7rem;
+z-index:2;
+">
+HADAPI © <span id="k_tahun"></span>
+</div>
+
+</div>
+<nav class="navbar">
+    <img src="hdp.png" width="60px" alt="Logo HADAPI">
+    <a href="#" class="nav-brand" onclick="showDashboard()">ADMIN HADAPI</a>
+    <div class="nav-links">
+        <button class="nav-item-btn" onclick="showDashboard()">
+            <i class="bi bi-grid-1x2"></i> Dashboard
+        </button>
+        <button class="nav-item-btn" onclick="filterByWilayah('Semua')">
+            <i class="bi bi-people"></i> Semua Anggota
+        </button>
+        <div class="dropdown">
+            <button class="nav-item-btn">
+                <i class="bi bi-geo-alt"></i> Pilih Wilayah <i class="bi bi-chevron-down" style="font-size: 0.7rem;"></i>
+            </button>
+            <div class="dropdown-content" id="navWilayahMenu">
+                </div>
+        </div>
+    </div>
+</nav>
+
+<div class="content" id="mainContent">
+    </div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyABkJXIiOt0bi7DhDULPb57qbYid1yDQC8",
+        authDomain: "hadapi-database.firebaseapp.com",
+        databaseURL: "https://hadapi-database-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "hadapi-database",
+        storageBucket: "hadapi-database.firebasestorage.app",
+        messagingSenderId: "583979731459",
+        appId: "1:583979731459:web:f6e713a8ca3b4b0daadc36"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database().ref("anggota");
+
+    const daftarWilayah = ["Lebak", "Provinsi", "Pandeglang", "Kabupaten Tangerang", "Kota Tangerang", "Kabupaten Serang", "Cilegon", "Kota Serang", "Tangerang Selatan"];
+    let dataAnggota = [];
+
+    db.on('value', (snapshot) => {
+        dataAnggota = [];
+        const val = snapshot.val();
+        if(val) {
+            Object.keys(val).forEach(key => {
+                dataAnggota.push({ id: key, ...val[key] });
+            });
+        }
+        renderNavMenu();
+        showDashboard();
+    });
+
+    function renderNavMenu() {
+        const menu = document.getElementById('navWilayahMenu');
+        menu.innerHTML = daftarWilayah.map(w => `
+            <button onclick="filterByWilayah('${w}')">${w}</button>
+        `).join('');
+    }
+
+    function showDashboard() {
+        const div = document.getElementById('mainContent');
+        let gridHtml = daftarWilayah.map(w => {
+            const jml = dataAnggota.filter(a => a.wilayah === w).length;
+            return `<div class="stat-card" onclick="filterByWilayah('${w}')"><h3>${w}</h3><p>${jml}</p></div>`;
+        }).join('');
+
+        div.innerHTML = `
+            <h2 class="section-title">Dashboard Koordinator Wilayah</h2>
+            <div class="dashboard-grid">
+                <div class="stat-card" style="border-bottom-color: #2c3e50;" onclick="filterByWilayah('Semua')">
+                    <h3>TOTAL SELURUH</h3>
+                    <p>${dataAnggota.length}</p>
+                </div>
+                ${gridHtml}
+            </div>
+            <h3 class="section-title">Laporan Data Terbaru</h3>
+            <div class="table-outer">
+                <div class="table-container">
+                    ${renderTable(dataAnggota.slice(-10).reverse())}
+                </div>
+            </div>
+        `;
+    }
+
+    function filterByWilayah(wil, ldkFilter = 'Semua') {
+    const div = document.getElementById('mainContent');
+    
+    // Filter data berdasarkan Wilayah terlebih dahulu
+    let baseData = wil === 'Semua' ? dataAnggota : dataAnggota.filter(a => a.wilayah === wil);
+    
+    // List unik LDK yang ada di wilayah tersebut untuk dijadikan tombol
+    const listLDK = [...new Set(baseData.map(a => a.ldk || 'Tanpa LDK'))].sort();
+
+    // Filter data berdasarkan LDK yang diklik
+    const finalData = ldkFilter === 'Semua' ? baseData : baseData.filter(a => a.ldk === ldkFilter);
+
+    div.innerHTML = `
+        <h2 class="section-title">Data Wilayah: ${wil}</h2>
+        
+        <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+            <b style="width: 100%; margin-bottom: 5px; font-size: 0.9rem; color: #7f8c8d;">Filter Berdasarkan LDK:</b>
+            
+            <button class="nav-item-btn ${ldkFilter === 'Semua' ? 'active' : ''}" 
+                    style="color: ${ldkFilter === 'Semua' ? 'white' : '#2c3e50'}; border: 1px solid #ddd;" 
+                    onclick="filterByWilayah('${wil}', 'Semua')">
+                Semua LDK (${baseData.length})
+            </button>
+
+            ${listLDK.map(ldk => {
+                const jmlPerLdk = baseData.filter(a => a.ldk === ldk).length;
+                return `
+                    <button class="nav-item-btn ${ldkFilter === ldk ? 'active' : ''}" 
+                            style="color: ${ldkFilter === ldk ? 'white' : '#2c3e50'}; border: 1px solid #ddd;" 
+                            onclick="filterByWilayah('${wil}', '${ldk}')">
+                        ${ldk} (${jmlPerLdk})
+                    </button>
+                `;
+            }).join('')}
+        </div>
+
+        <h3 class="section-title" style="font-size: 1rem;">Menampilkan: ${ldkFilter} (${finalData.length} Orang)</h3>
+        
+        <div class="table-outer">
+            <div class="table-container">
+                ${renderTable(finalData)}
+            </div>
+        </div>
+
+        <button class="nav-item-btn" style="margin-top:20px; color:#2c3e50; border: 1px solid #ddd;" onclick="showDashboard()">
+            <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+        </button>
+    `;
+}
+
+    function renderTable(data) {
+        if(data.length === 0) return "<p style='padding:20px;'>Belum ada data anggota.</p>";
+        
+        return `
+            <table>
+                <thead>
+                    <tr>
+                        <th class="sticky-col">Nama Lengkap</th>
+                        <th>ID Jammas</th>
+                        <th>No KSU</th>
+                        <th>Aktif Anggota</th>
+                        <th>Wilayah</th>
+                        <th>No Telpon (WA)</th>
+                        <th>Utama</th>
+                        <th>Pendidikan</th>
+                        <th>Usia</th>
+                        <th>J. Kelamin</th>
+                        <th>Status Nikah</th>
+                        <th>Status Bina</th>
+                        <th>Kesehatan</th>
+                        <th>Olahraga</th>
+                        <th>Kesenian</th>
+                        <th>LDK</th>
+                        <th>Nama Ortu</th>
+                        <th>Tmp Lahir</th>
+                        <th>Tgl Lahir</th>
+                        <th>Alamat</th>
+                        <th>Nama Bank</th>
+                    <th>No Rekening</th>
+                        <th>Alumni Maz</th>
+                        <th>Teknik</th>
+                        <th>Waktu Input</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${data.map(a => `
+                        <tr>
+                            <td class="sticky-col"><b>${a.nama_lengkap || '-'}</b></td>
+                            <td>${a.id_jammas || '-'}</td>
+                            <td>${a.no_ksu || '-'}</td>
+                            <td>${a.aktif_anggota || '-'}</td>
+                            <td><span class="badge-wilayah">${a.wilayah || '-'}</span></td>
+                            <td>${a.telp || '-'}</td>
+                            <td>${a.aktivitas_utama || '-'}</td>
+                            <td>${a.pendidikan || '-'}</td>
+                            <td>${a.usia || '-'}</td>
+                            <td>${a.jk || '-'}</td>
+                            <td>${a.status_nikah || '-'}</td>
+                            <td>${a.status_bina || '-'}</td>
+                            <td>${a.kesehatan || '-'}</td>
+                            <td>${a.olahraga || '-'}</td>
+                            <td>${a.kesenian || '-'}</td>
+                            <td>${a.ldk || '-'}</td>
+                            <td>${a.nama_ortu || '-'}</td>
+                            <td>${a.tmp_lahir || '-'}</td>
+                            <td>${a.tgl_lahir || '-'}</td>
+                            <td title="${a.alamat}">${a.alamat ? a.alamat.substring(0, 20) + '...' : '-'}</td>
+                            <td><span style="color: #c0392b; font-weight: bold;">${a.nama_bank || '-'}</span></td>
+                        <td><code>${a.no_rekening || '-'}</code></td>
+                            <td>${a.alumni_maz || '-'}</td>
+                            <td>${a.bidang_teknik || '-'}</td>
+                            <td style="font-size:0.7rem; color:#95a5a6">${a.waktu_input || '-'}</td>
+                            <td>
+    <button onclick="downloadKartu('${a.id}')" class="nav-item-btn">
+        <i class="bi bi-image"></i>
+    </button>
+    <button onclick="downloadPDF('${a.id}')" class="nav-item-btn">
+        <i class="bi bi-file-earmark-pdf"></i>
+    </button>
+    <button class="btn-delete" onclick="hapus('${a.id}')">
+        <i class="bi bi-trash"></i>
+    </button>
+</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+ function isiKartu(data) {
+    document.getElementById('k_nama').innerText = data.nama_lengkap || '-';
+    document.getElementById('k_id').innerText = data.id_jammas || '-';
+    document.getElementById('k_wilayah').innerText = data.wilayah || '-';
+    document.getElementById('k_ldk').innerText = data.ldk || '-';
+    document.getElementById('k_status').innerText = data.status_bina || '-';
+
+    let tahun = '-';
+    if (data.waktu_input) {
+        tahun = data.waktu_input.substring(0, 4);
+    }
+    document.getElementById('k_tahun').innerText = tahun;
+}
+async function downloadKartu(id) {
+    const data = dataAnggota.find(a => a.id === id);
+    if (!data) return;
+
+    const kartu = document.getElementById('kartuTemplate');
+
+    isiKartu(data);
+    kartu.style.display = 'block';
+
+    await new Promise(r => setTimeout(r, 800));
+
+    const canvas = await html2canvas(kartu, {
+        scale: 3,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: null
+    });
+
+    const link = document.createElement('a');
+    link.download = `kartu_${data.nama_lengkap}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+
+    kartu.style.display = 'none';
+}
+
+function hapus(id) {
+    // 1. Konfirmasi ke admin agar tidak sengaja terhapus
+    if (confirm("Apakah Anda yakin ingin menghapus data anggota ini secara permanen?")) {
+        
+        // 2. Jalankan perintah hapus ke Firebase berdasarkan ID (key)
+        db.child(id).remove()
+        .then(() => {
+            alert("Data berhasil dihapus!");
+            // Data akan otomatis hilang dari tabel karena kita menggunakan listener db.on('value')
+        })
+        .catch((error) => {
+            alert("Gagal menghapus: " + error.message);
+        });
+    }
+}
+
+
+async function downloadPDF(id) {
+    const data = dataAnggota.find(a => a.id === id);
+    if (!data) return;
+
+    const kartu = document.getElementById('kartuTemplate');
+
+    isiKartu(data);
+    kartu.style.display = 'block';
+
+    await new Promise(r => setTimeout(r, 800));
+
+    const canvas = await html2canvas(kartu, {
+        scale: 3,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: null
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('landscape');
+
+    pdf.addImage(imgData, 'PNG', 10, 10, 260, 130);
+    pdf.save(`kartu_${data.nama_lengkap}.pdf`);
+
+    kartu.style.display = 'none';
+}
+function tampilkanDetailLangsung(data) {
+    const div = document.getElementById('mainContent');
+
+    div.innerHTML = `
+        <div style="
+            max-width:600px;
+            margin:20px auto;
+            background: linear-gradient(135deg, #2c3e50, #c0392b);
+            border-radius:15px;
+            padding:20px;
+            color:white;
+        ">
+            <h2 style="text-align:center;">KARTU DATA ANGGOTA</h2>
+
+            <div style="background:white; color:#2c3e50; padding:15px; border-radius:10px;">
+                <p><b>Nama:</b> ${data.nama_lengkap}</p>
+                <p><b>ID:</b> ${data.id_jammas}</p>
+                <p><b>Wilayah:</b> ${data.wilayah}</p>
+                <p><b>No HP:</b> ${data.telp}</p>
+                <p><b>Alamat:</b> ${data.alamat}</p>
+            </div>
+        </div>
+    `;
+}
+
+function tampilkanDetail(id) {
+    const data = dataAnggota.find(a => a.id === id);
+    if (!data) return;
+
+    const div = document.getElementById('mainContent');
+
+    div.innerHTML = `
+        <div style="
+            max-width:600px;
+            margin:20px auto;
+            background: linear-gradient(135deg, #2c3e50, #c0392b);
+            border-radius:15px;
+            padding:20px;
+            color:white;
+            box-shadow:0 5px 20px rgba(0,0,0,0.2);
+        ">
+
+            <h2 style="text-align:center; margin-bottom:15px;">
+                KARTU DATA ANGGOTA
+            </h2>
+
+            <div style="
+                background:white;
+                color:#2c3e50;
+                border-radius:10px;
+                padding:15px;
+                font-size:0.9rem;
+                line-height:1.6;
+            ">
+
+                <p><b>Nama Lengkap:</b> ${data.nama_lengkap || '-'}</p>
+                <p><b>ID Jammas:</b> ${data.id_jammas || '-'}</p>
+                <p><b>No KSU:</b> ${data.no_ksu || '-'}</p>
+                <p><b>Wilayah:</b> ${data.wilayah || '-'}</p>
+                <p><b>No HP:</b> ${data.telp || '-'}</p>
+
+                <hr>
+
+                <p><b>Pendidikan:</b> ${data.pendidikan || '-'}</p>
+                <p><b>Usia:</b> ${data.usia || '-'}</p>
+                <p><b>Jenis Kelamin:</b> ${data.jk || '-'}</p>
+                <p><b>Status Nikah:</b> ${data.status_nikah || '-'}</p>
+
+                <hr>
+
+                <p><b>Status Bina:</b> ${data.status_bina || '-'}</p>
+                <p><b>Kesehatan:</b> ${data.kesehatan || '-'}</p>
+                <p><b>Olahraga:</b> ${data.olahraga || '-'}</p>
+                <p><b>Kesenian:</b> ${data.kesenian || '-'}</p>
+
+                <hr>
+
+                <p><b>Nama Orang Tua:</b> ${data.nama_ortu || '-'}</p>
+                <p><b>Tempat, Tgl Lahir:</b> ${data.tmp_lahir || '-'}, ${data.tgl_lahir || '-'}</p>
+                <p><b>Alamat:</b> ${data.alamat || '-'}</p>
+
+                <hr>
+
+                <p style="font-size:0.75rem; color:gray;">
+                    Waktu Input: ${data.waktu_input || '-'}
+                </p>
+
+            </div>
+        </div>
+
+        <div style="text-align:center;">
+            <button class="nav-item-btn" style="margin-top:20px; color:#2c3e50; border:1px solid #ddd;" onclick="showDashboard()">
+                <i class="bi bi-arrow-left"></i> Kembali
+            </button>
+        </div>
+    `;
+
+    if (typeof html2canvas === "undefined") {
+    alert("html2canvas belum terload!");
+    return;
+}
+
+
+}</script>
+<script>
+    // 1. Matikan Klik Kanan
+    document.addEventListener('contextmenu', event => event.preventDefault());
+
+    // 2. Matikan Shortcut Keyboard (F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U)
+    document.onkeydown = function (e) {
+        if (e.keyCode == 123) { // F12
+            return false;
+        }
+        if (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) { // Inspect
+            return false;
+        }
+        if (e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) { // Console
+            return false;
+        }
+        if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) { // View Source
+            return false;
+        }
+    };
+
+    // 3. Anti-Debugger (Membingungkan tool Inspect jika terbuka)
+    setInterval(function(){
+        debugger;
+    }, 100);
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</body>
+</html>
